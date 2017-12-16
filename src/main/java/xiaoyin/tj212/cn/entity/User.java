@@ -2,12 +2,21 @@ package xiaoyin.tj212.cn.entity;
 
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @Entity
-public class User {
+public class User implements UserDetails,Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,17 +40,36 @@ public class User {
 
     @NotEmpty(message = "密码不能为空")
     @Size(min = 3,max = 100,message = "密码长度为3-100")
-    @Column(nullable = false,length = 100,unique = true)//映射为字段，值不能为空
+    @Column(nullable = false,length = 100)//映射为字段，值不能为空
     private String password;
 
     @Column(length = 300)
     private String avatar;//头像图片的地址
 
-    public User(Long id,String name, String email, String username) {
-        this.id=id;
+    @ManyToMany(cascade = CascadeType.DETACH,fetch = FetchType.EAGER)
+    @JoinTable(name = "user_authority",joinColumns = @JoinColumn(name = "user_id",referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "my_authority_id",referencedColumnName = "id"))
+    private List<MyAuthority> authorities;
+
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        //需要将List<Authority>转化为List<SimpleGrantedAuthority>，否则前端拿不到列表名称
+        List<SimpleGrantedAuthority> grantedAuthorities=new ArrayList<>();
+        for (GrantedAuthority authority:authorities
+             ) {
+            grantedAuthorities.add(new SimpleGrantedAuthority(authority.getAuthority()));
+        }
+        return grantedAuthorities;
+    }
+
+    public void setAuthorities(List<MyAuthority> authorities) {
+        this.authorities = authorities;
+    }
+
+    public User( String name, String email, String username,String password) {
         this.name = name;
         this.email = email;
         this.username = username;
+        this.password=password;
     }
 
     public Long getId() {
@@ -72,6 +100,26 @@ public class User {
         return username;
     }
 
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
     public void setUsername(String username) {
         this.username = username;
     }
@@ -82,6 +130,12 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public void setEncodePassword(String password){
+        PasswordEncoder encoder=new BCryptPasswordEncoder();
+        String encodePassword=encoder.encode(password);
+        this.password=encodePassword;
     }
 
     public String getAvatar() {

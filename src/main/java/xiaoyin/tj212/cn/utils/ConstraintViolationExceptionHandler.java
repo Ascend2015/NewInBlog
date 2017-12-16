@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 用以处理异常
  */
-public class ContraintViolationExceptionHandler {
+public class ConstraintViolationExceptionHandler {
     public static String getMessage(ConstraintViolationException e){
         List<String> msgList=new ArrayList<>();
         for (ConstraintViolation<?> constraintViolation:e.getConstraintViolations()){

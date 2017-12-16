@@ -1,12 +1,29 @@
 package xiaoyin.tj212.cn.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import xiaoyin.tj212.cn.entity.MyAuthority;
+import xiaoyin.tj212.cn.entity.User;
+import xiaoyin.tj212.cn.service.AuthorityService;
+import xiaoyin.tj212.cn.service.UserService;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 public class MainController {
+
+    private static final Long ROLE_USER_AUTHORITY=2L;
+
+    @Autowired
+    private AuthorityService authorityService;
+
+    @Autowired
+    private UserService userService;
 
     @GetMapping("/")
     public String root() {
@@ -31,8 +48,18 @@ public class MainController {
     }
 
     @GetMapping("/register")
-    public String register() {
+    public String register(){
         return "register";
+    }
+
+    @PostMapping("/register")
+    public String registerUser(User user) {
+        List<MyAuthority> authorities=new ArrayList<>();
+        authorities.add(authorityService.getAuthorityById(ROLE_USER_AUTHORITY));
+        user.setAuthorities(authorities);
+
+        userService.saveUser(user);
+        return "redirect:/login";
     }
 
     @GetMapping("/search")

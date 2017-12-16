@@ -8,13 +8,19 @@ import java.util.List;
 
 public interface UserService {
 
-    User saveOrUpdateUser(User user);
+    User saveUser(User user);
+
+    void removeUserInBatch(List<User> users);
+
+    User updateUser(User user);
 
     User registerUser(User user);
 
     void removeUser(Long id);
 
     User getUserById(Long id);
+
+    List<User> listUsers();
 
     /**
      * 根据姓名进行分页模糊查询
